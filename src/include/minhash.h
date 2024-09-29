@@ -101,7 +101,7 @@ public:
     struct u *hash;
     int left_pos;
 
-    MINHASH_HASH( int len, int hash_cnt) : HASH_LEN(len), HASH_CNT(hash_cnt)
+    MINHASH_HASH(int len, int hash_cnt) : HASH_LEN(len), HASH_CNT(hash_cnt)
     {
         srand(clock());
         index_s = rand();
