@@ -4,7 +4,8 @@
 #include <fstream>
 #include <omp.h>
 
-double enroll_novel_minhash(int loop_time, int len, int hash_cnt, string dataset_name = "caida", int nytimes_dataset_len = 800000, int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
+template <int memory>
+double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "caida", int nytimes_dataset_len = 800000, int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
 {
     LOG_DEBUG("enter enroll_novel_minhash()");
     bool is_bow = dataset_name == "docword.nytimes";
@@ -43,7 +44,7 @@ double enroll_novel_minhash(int loop_time, int len, int hash_cnt, string dataset
     // #pragma omp parallel for
     for (int i = 0; i < loop_time; i++)
     {
-        novel_minhash nm(len, hash_cnt);
+        novel_minhash<memory> nm(hash_cnt);
 
         start = std::chrono::high_resolution_clock::now();
         if (!is_bow)

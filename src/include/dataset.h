@@ -52,13 +52,13 @@ public:
     unordered_map<data_t, count_t> counter;
     unordered_map<data_t, count_t> counter1, counter2;
 
-    void init(string PATH, int size_per_item, bool separate = true, bool use_known_zipf = true, double zipf_alpha = 1.0)
+    void init(string PATH, int size_per_item, bool separate = true, bool use_known_zipf = true, double zipf_alpha = 1.0, bool keep_log=false)
     {
         if (!use_known_zipf)
         {
             StreamGen streamgen;
             streamgen.init(zipf_alpha, 200000, 32000000);
-            LOG_DEBUG("streamgen.TOTAL_PACKETS=%d, streamgen.TOTAL_FLOWS=%d", streamgen.TOTAL_PACKETS, streamgen.TOTAL_FLOWS);
+            if(keep_log) LOG_DEBUG("streamgen.TOTAL_PACKETS=%d, streamgen.TOTAL_FLOWS=%d", streamgen.TOTAL_PACKETS, streamgen.TOTAL_FLOWS);
             std::shuffle(streamgen.raw_data, streamgen.raw_data + streamgen.TOTAL_PACKETS, std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
             // for (int i = 0; i < 10; i++)
             //     LOG_DEBUG("streamgen.raw_data[%d]=%d", i * 10000, streamgen.raw_data[i * 10000]);
@@ -71,7 +71,7 @@ public:
                 stream1.counter[stream1.raw_data[i]]++;
             }
             stream1.TOTAL_FLOWS = stream1.counter.size();
-            LOG_DEBUG("[STREAM #1]Total packets: %d, Total flows: %d", stream1.TOTAL_PACKETS, stream1.TOTAL_FLOWS);
+            if(keep_log) LOG_DEBUG("[STREAM #1]Total packets: %d, Total flows: %d", stream1.TOTAL_PACKETS, stream1.TOTAL_FLOWS);
 
             stream2.TOTAL_PACKETS = streamgen.TOTAL_PACKETS - stream1.TOTAL_PACKETS;
             stream2.raw_data = new data_t[stream2.TOTAL_PACKETS];
@@ -81,13 +81,13 @@ public:
                 stream2.counter[stream2.raw_data[i]]++;
             }
             stream2.TOTAL_FLOWS = stream2.counter.size();
-            LOG_DEBUG("[STREAM #2]Total packets: %d, Total flows: %d", stream2.TOTAL_PACKETS, stream2.TOTAL_FLOWS);
-            LOG_DEBUG("Dataset initialized.");
+            if(keep_log) LOG_DEBUG("[STREAM #2]Total packets: %d, Total flows: %d", stream2.TOTAL_PACKETS, stream2.TOTAL_FLOWS);
+            if(keep_log) LOG_DEBUG("Dataset initialized.");
             return;
         }
         if (!separate)
         {
-            LOG_DEBUG("into Dataset::init()");
+            if(keep_log) LOG_DEBUG("into Dataset::init()");
             string path1 = "../dataset/130000.dat";
             string path2 = "../dataset/130100.dat";
             int fd1 = Open(path1.c_str(), O_RDONLY);
@@ -99,8 +99,8 @@ public:
             int n_elements2 = buf2.st_size / size_per_item;
             TOTAL_PACKETS1 = n_elements1;
             TOTAL_PACKETS2 = n_elements2;
-            LOG_DEBUG("TOTAL_PACKETS1=%d, TOTAL_PACKETS2=%d", n_elements1, n_elements2);
-            LOG_DEBUG("Mmap...");
+            if(keep_log) LOG_DEBUG("TOTAL_PACKETS1=%d, TOTAL_PACKETS2=%d", n_elements1, n_elements2);
+            if(keep_log) LOG_DEBUG("Mmap...");
             void *addr1 = mmap(NULL, buf1.st_size, PROT_READ, MAP_PRIVATE, fd1, 0);
             void *addr2 = mmap(NULL, buf2.st_size, PROT_READ, MAP_PRIVATE, fd2, 0);
             raw_data1 = new data_t[n_elements1];
@@ -134,8 +134,8 @@ public:
             {
                 counter2[raw_data2[i]]++;
             }
-            LOG_DEBUG("Total packets1: %d, Total flows1: %zu", n_elements1, counter1.size());
-            LOG_DEBUG("Total packets2: %d, Total flows2: %zu", n_elements2, counter2.size());
+            if(keep_log) LOG_DEBUG("Total packets1: %d, Total flows1: %zu", n_elements1, counter1.size());
+            if(keep_log) LOG_DEBUG("Total packets2: %d, Total flows2: %zu", n_elements2, counter2.size());
 
             stream1.TOTAL_PACKETS = n_elements1;
             stream1.raw_data = new data_t[stream1.TOTAL_PACKETS];
@@ -145,7 +145,7 @@ public:
                 stream1.counter[stream1.raw_data[i]]++;
             }
             stream1.TOTAL_FLOWS = stream1.counter.size();
-            LOG_DEBUG("[STREAM #1]Total packets: %d, Total flows: %d", stream1.TOTAL_PACKETS, stream1.TOTAL_FLOWS);
+            if(keep_log) LOG_DEBUG("[STREAM #1]Total packets: %d, Total flows: %d", stream1.TOTAL_PACKETS, stream1.TOTAL_FLOWS);
 
             stream2.TOTAL_PACKETS = n_elements2;
             stream2.raw_data = new data_t[stream2.TOTAL_PACKETS];
@@ -155,20 +155,20 @@ public:
                 stream2.counter[stream2.raw_data[i]]++;
             }
             stream2.TOTAL_FLOWS = stream2.counter.size();
-            LOG_DEBUG("[STREAM #2]Total packets: %d, Total flows: %d", stream2.TOTAL_PACKETS, stream2.TOTAL_FLOWS);
-            LOG_DEBUG("Dataset initialized.");
-            LOG_DEBUG("exit Dataset::init()");
+            if(keep_log) LOG_DEBUG("[STREAM #2]Total packets: %d, Total flows: %d", stream2.TOTAL_PACKETS, stream2.TOTAL_FLOWS);
+            if(keep_log) LOG_DEBUG("Dataset initialized.");
+            if(keep_log) LOG_DEBUG("exit Dataset::init()");
             return;
         }
-        LOG_DEBUG("into Dataset::init()");
+        if(keep_log) LOG_DEBUG("into Dataset::init()");
         struct stat buf;
-        LOG_DEBUG("Opening file %s", PATH.c_str());
+        if(keep_log) LOG_DEBUG("Opening file %s", PATH.c_str());
         int fd = Open(PATH.c_str(), O_RDONLY);
         fstat(fd, &buf);
         int n_elements = buf.st_size / size_per_item;
         TOTAL_PACKETS = n_elements;
-        LOG_DEBUG("TOTAL_PACKETS=%d", n_elements);
-        LOG_DEBUG("Mmap...");
+        if(keep_log) LOG_DEBUG("TOTAL_PACKETS=%d", n_elements);
+        if(keep_log) LOG_DEBUG("Mmap...");
         void *addr = mmap(NULL, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
         raw_data = new data_t[n_elements];
         close(fd);
@@ -189,7 +189,7 @@ public:
         {
             counter[raw_data[i]]++;
         }
-        LOG_DEBUG("Total packets: %d, Total flows: %zu", n_elements, counter.size());
+        if(keep_log) LOG_DEBUG("Total packets: %d, Total flows: %zu", n_elements, counter.size());
 
         stream1.TOTAL_PACKETS = n_elements / 2;
         stream1.raw_data = new data_t[stream1.TOTAL_PACKETS];
@@ -199,7 +199,7 @@ public:
             stream1.counter[stream1.raw_data[i]]++;
         }
         stream1.TOTAL_FLOWS = stream1.counter.size();
-        LOG_DEBUG("[STREAM #1]Total packets: %d, Total flows: %d", stream1.TOTAL_PACKETS, stream1.TOTAL_FLOWS);
+        if(keep_log) LOG_DEBUG("[STREAM #1]Total packets: %d, Total flows: %d", stream1.TOTAL_PACKETS, stream1.TOTAL_FLOWS);
 
         stream2.TOTAL_PACKETS = n_elements - stream1.TOTAL_PACKETS;
         stream2.raw_data = new data_t[stream2.TOTAL_PACKETS];
@@ -209,9 +209,9 @@ public:
             stream2.counter[stream2.raw_data[i]]++;
         }
         stream2.TOTAL_FLOWS = stream2.counter.size();
-        LOG_DEBUG("[STREAM #2]Total packets: %d, Total flows: %d", stream2.TOTAL_PACKETS, stream2.TOTAL_FLOWS);
-        LOG_DEBUG("Dataset initialized.");
-        LOG_DEBUG("exit Dataset::init()");
+        if(keep_log) LOG_DEBUG("[STREAM #2]Total packets: %d, Total flows: %d", stream2.TOTAL_PACKETS, stream2.TOTAL_FLOWS);
+        if(keep_log) LOG_DEBUG("Dataset initialized.");
+        if(keep_log) LOG_DEBUG("exit Dataset::init()");
         return;
     }
 
