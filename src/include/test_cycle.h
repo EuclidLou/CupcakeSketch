@@ -2,6 +2,7 @@
 #include "cycle.h"
 #include "dataset.h"
 #include <fstream>
+#include <omp.h>
 
 double distribution_cycle(int loop_time, int len, string dataset_name = "caida", int nytimes_dataset_len = 800000, int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
 {
@@ -39,6 +40,7 @@ double distribution_cycle(int loop_time, int len, string dataset_name = "caida",
 
     double similarity_avg = 0;
     auto start = std::chrono::high_resolution_clock::now(), end = std::chrono::high_resolution_clock::now();
+    // #pragma omp parallel for
     for (int i = 0; i < loop_time; i++)
     {
         cycle_ours cs(len);

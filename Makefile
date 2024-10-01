@@ -1,5 +1,5 @@
 # Flags
-CXXFLAGS := -Wall -Werror -Wno-reorder-ctor -Wno-unused-function -Wno-unused-variable -Wno-unused-private-field -Wno-register -Wno-c++11-narrowing -std=c++20
+CXXFLAGS := -Wall -Werror -Wno-reorder-ctor -Wno-unused-function -Wno-unused-variable -Wno-unused-private-field -Wno-register -Wno-c++11-narrowing -std=c++20 -fopenmp
 FFLAGS :=
 BFLAGS := -d -v
 LOGMODE :=
