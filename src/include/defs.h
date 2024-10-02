@@ -28,6 +28,13 @@ struct u
     int index;
 };
 
+struct struct_pair_freq_t
+{
+    int gt_freq;
+    int est_freq;
+};
+
+typedef struct struct_pair_freq_t pair_freq_t;
 
 typedef std::chrono::high_resolution_clock::time_point TP;
 

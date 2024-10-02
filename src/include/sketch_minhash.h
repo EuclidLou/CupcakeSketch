@@ -13,24 +13,24 @@
 class Counter
 {
 public:
-    int counter1(data_t item)
+    std::unordered_map<data_t, int> freq1;
+    std::unordered_map<data_t, int> freq2;
+    int counter1(data_t item, bool wo_insert=false)
     {
-        q1.push(item);
-        freq1[item]++;
+        if(!wo_insert)
+        {
+            freq1[item]++;
+        }
         return freq1[item];
     }
-    int counter2(data_t item)
+    int counter2(data_t item, bool wo_insert=false)
     {
-        q2.push(item);
-        freq2[item]++;
+        if(!wo_insert)
+        {
+            freq2[item]++;
+        }
         return freq2[item];
     }
-
-private:
-    std::queue<data_t> q1;
-    std::unordered_map<data_t, int> freq1;
-    std::queue<data_t> q2;
-    std::unordered_map<data_t, int> freq2;
 };
 
 template <int memory>
@@ -50,24 +50,24 @@ public:
         delete sketch1;
         delete sketch2;
     }
-    int counter1(data_t item)
+    int counter1(data_t item, bool wo_insert=false)
     {
         uint8_t key[4];
         key[0] = (item >> 24) & 0xFF;
         key[1] = (item >> 16) & 0xFF;
         key[2] = (item >> 8) & 0xFF;
         key[3] = item & 0xFF;
-        sketch1->insert((uint8_t *)key, 1);
+        if(!wo_insert) sketch1->insert((uint8_t *)key, 1);
         return sketch1->query((uint8_t *)key);
     }
-    int counter2(data_t item)
+    int counter2(data_t item, bool wo_insert=false)
     {
         uint8_t key[4];
         key[0] = (item >> 24) & 0xFF;
         key[1] = (item >> 16) & 0xFF;
         key[2] = (item >> 8) & 0xFF;
         key[3] = item & 0xFF;
-        sketch2->insert((uint8_t *)key, 1);
+        if(!wo_insert) sketch2->insert((uint8_t *)key, 1);
         return sketch2->query((uint8_t *)key);
     }
 };
@@ -84,6 +84,7 @@ public:
     struct u *hash;
     int left_pos;
     Counter_Sketch<memory> counter;
+    Counter counter_gt;
 
     novel_minhash(int hash_cnt) : HASH_CNT(hash_cnt)
     {
@@ -110,9 +111,10 @@ public:
         delete[] min_hash_value_2;
     }
 
-    void insert1(data_t item)
+    void insert1(data_t item, bool need_gt=false)
     {
         int freq = counter.counter1(item);
+        if(need_gt) counter_gt.counter1(item);
         // #pragma omp parallel for
         // for (int i = 0; i < HASH_CNT; i++)
         // {
@@ -122,9 +124,10 @@ public:
         min_hash_value_1[min_idx] = std::min(min_hash_value_1[min_idx], HASH::hash(HASH::hash(item, hash_seed[min_idx]), freq));
     }
 
-    void insert2(data_t item)
+    void insert2(data_t item, bool need_gt=false)
     {
         int freq = counter.counter2(item);
+        if(need_gt) counter_gt.counter2(item);
         // #pragma omp parallel for
         // for (int i = 0; i < HASH_CNT; i++)
         // {
@@ -147,6 +150,44 @@ public:
         // LOG_RESULT("similarity: %lf", similarity);
         // LOG_DEBUG("exit similarity_minhash()");
         return similarity;
+    }
+
+    double sketch_aae()
+    {
+        int num_key = 0;
+        double AE = 0;
+        double RE = 0;
+        std::unordered_map<data_t, pair_freq_t> pair_freq;
+        data_t key;
+        int gt_freq;
+        int est_freq;
+        for (const auto& pair : counter_gt.freq1)
+        {
+            key = pair.first;
+            gt_freq = pair.second;
+            est_freq = counter.counter1(key, true);
+            pair_freq[key].gt_freq += gt_freq;
+            pair_freq[key].est_freq += est_freq;
+            AE += (est_freq - gt_freq);
+            RE += static_cast<double>(est_freq - gt_freq) / gt_freq;
+            num_key += 1;
+        }
+        for (const auto& pair : counter_gt.freq2)
+        {
+            key = pair.first;
+            gt_freq = pair.second;
+            est_freq = counter.counter2(key, true);
+            pair_freq[key].gt_freq += gt_freq;
+            pair_freq[key].est_freq += est_freq;
+            AE += (est_freq - gt_freq);
+            RE += static_cast<double>(est_freq - gt_freq) / gt_freq;
+            num_key += 1;
+        }
+        double AAE = AE / num_key;
+        double ARE = RE / num_key * 100;
+        std::size_t total_flow = pair_freq.size();
+        LOG_RESULT("AAE: %lf, ARE: %lf%c", AAE, ARE, '%');
+        return AAE;
     }
 };
 

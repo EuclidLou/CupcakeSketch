@@ -12,6 +12,7 @@ double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "
     Dataset dataset;
     Dataset_BoW dataset_bow1, dataset_bow2;
     int total_packets = 0;
+    bool need_gt = true;
 
     if (dataset_name == "caida")
     {
@@ -50,20 +51,21 @@ double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "
         if (!is_bow)
         {
             for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++)
-                nm.insert1(dataset.stream1.raw_data[i]);
+                nm.insert1(dataset.stream1.raw_data[i], need_gt);
             for (int i = 0; i < dataset.stream2.TOTAL_PACKETS; i++)
-                nm.insert2(dataset.stream2.raw_data[i]);
+                nm.insert2(dataset.stream2.raw_data[i], need_gt);
         }
         else if (is_bow)
         {
             for (int i = 0; i < dataset_bow1.TOTAL_PACKETS; i++)
-                nm.insert1(dataset_bow1.raw_data[i]);
+                nm.insert1(dataset_bow1.raw_data[i], need_gt);
             for (int i = 0; i < dataset_bow2.TOTAL_PACKETS; i++)
-                nm.insert2(dataset_bow2.raw_data[i]);
+                nm.insert2(dataset_bow2.raw_data[i], need_gt);
         }
         end = std::chrono::high_resolution_clock::now();
 
         double similarity = nm.similarity();
+        if(need_gt) nm.sketch_aae();
         similarity_avg += similarity;
     }
     similarity_avg /= loop_time;

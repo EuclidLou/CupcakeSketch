@@ -2,7 +2,7 @@
 #define _ELASTIC_SKETCH_H_
 
 #include "HeavyPart.h"
-//#include "HeavyPart-noSIMD.h"
+// #include "HeavyPart-noSIMD.h"
 #include "LightPart.h"
 
 template <int bucket_num, int tot_memory_in_bytes>
