@@ -54,20 +54,20 @@ public:
     int counter1(data_t item, bool wo_insert=false)
     {
         uint8_t key[4];
-        key[0] = (item >> 24) & 0xFF;
-        key[1] = (item >> 16) & 0xFF;
-        key[2] = (item >> 8) & 0xFF;
-        key[3] = item & 0xFF;
+        key[3] = (item >> 24) & 0xFF;
+        key[2] = (item >> 16) & 0xFF;
+        key[1] = (item >> 8) & 0xFF;
+        key[0] = item & 0xFF;
         if(!wo_insert) sketch1->insert((uint8_t *)key, 1);
         return sketch1->query((uint8_t *)key);
     }
     int counter2(data_t item, bool wo_insert=false)
     {
         uint8_t key[4];
-        key[0] = (item >> 24) & 0xFF;
-        key[1] = (item >> 16) & 0xFF;
-        key[2] = (item >> 8) & 0xFF;
-        key[3] = item & 0xFF;
+        key[3] = (item >> 24) & 0xFF;
+        key[2] = (item >> 16) & 0xFF;
+        key[1] = (item >> 8) & 0xFF;
+        key[0] = item & 0xFF;
         if(!wo_insert) sketch2->insert((uint8_t *)key, 1);
         return sketch2->query((uint8_t *)key);
     }

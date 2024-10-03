@@ -92,10 +92,10 @@ bool cmp_item(const FLOW_ITEM& cur, const FLOW_ITEM& other){
 typedef vector<FIVE_TUPLE> TRACE;
 
 vector<uint32_t> cs_tower = {2,4,8};
-vector<uint32_t> cs_cm = {32, 32, 32};
+vector<uint32_t> cs_cm = {8, 8, 8};
 
 vector<double> width_mul_tower = {4./3, 2./3, 1./3};
-vector<double> width_mul_cm = {1./12., 1./12., 1./12.};
+vector<double> width_mul_cm = {1./3., 1./3., 1./3.};
 vector<double> width_mul_cm_tower = {4./7,4./7,4./7};
 
 uint32_t getFP(uint32_t key)

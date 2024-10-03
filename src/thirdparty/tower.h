@@ -24,7 +24,7 @@ public:
     {
         w = in_w, h = in_h, counter_len = in_counter_len;
         // cout << "counter len : " << (int)counter_len << endl;
-        counter_per_int = 8 / counter_len;
+        counter_per_int = 8. / counter_len;
         if (counter_len == 32)
             mask = counter_max = 0xffffffff;
         else

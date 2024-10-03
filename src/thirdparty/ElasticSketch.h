@@ -27,7 +27,7 @@ public:
         vector<uint32_t> width;
         for (int i = 0; i < width_mul_tower.size(); i++)
         {
-            width.push_back((int)(light_mem * width_mul_tower[i] / 4));
+            width.push_back((int)(light_mem * width_mul_tower[i]*3));
         }
         tower = new TowerSketch(width, 1, cs_tower, 0);
 #endif
@@ -46,19 +46,24 @@ public:
 #ifdef USE_TOWER
         uint8_t swap_key[KEY_LENGTH_4];
         uint32_t swap_val = 0;
-        uint32_t key_uint32 = *((uint32_t *)key);
         int result = heavy_part.insert(key, swap_key, swap_val, f);
-        uint32_t swap_key_uint32 = *((uint32_t *)swap_key);
+        uint32_t old_val;
 
         switch (result)
         {
         case 0:
             return;
         case 1:
-            tower->insert(swap_key_uint32, 0, swap_val);
+            if (HIGHEST_BIT_IS_1(swap_val))
+                tower->insert(*((uint32_t *)swap_key), 0, GetCounterVal(swap_val));
+            else
+            {
+                old_val = tower->query(*((uint32_t *)swap_key), 0);
+                if(old_val < swap_val) tower->insert(*((uint32_t *)swap_key), 0, (swap_val-old_val));
+            }
             return;
         case 2:
-            tower->insert(key_uint32, 0, 1);
+            tower->insert(*((uint32_t *)key), 0, 1);
             return;
         default:
             printf("error return value !\n");
