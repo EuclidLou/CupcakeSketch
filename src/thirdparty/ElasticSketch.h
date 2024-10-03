@@ -4,6 +4,8 @@
 #include "HeavyPart.h"
 // #include "HeavyPart-noSIMD.h"
 #include "LightPart.h"
+#include "tower.h"
+#include "../include/macros.h"
 
 template <int bucket_num, int tot_memory_in_bytes>
 class ElasticSketch
@@ -12,23 +14,60 @@ class ElasticSketch
     static constexpr int light_mem = tot_memory_in_bytes - heavy_mem;
 
     HeavyPart<bucket_num> heavy_part;
+#ifdef USE_TOWER
+    TowerSketch *tower;
+#else
     LightPart<light_mem> light_part;
+#endif
 
 public:
-    ElasticSketch() {}
+    ElasticSketch()
+    {
+#ifdef USE_TOWER
+        vector<uint32_t> width;
+        for (int i = 0; i < width_mul_tower.size(); i++)
+        {
+            width.push_back((int)(light_mem * width_mul_tower[i] / 4));
+        }
+        tower = new TowerSketch(width, 1, cs_tower, 0);
+#endif
+    }
     ~ElasticSketch() {}
     void clear()
     {
         heavy_part.clear();
+#ifndef USE_TOWER
         light_part.clear();
+#endif
     }
 
-    void insert(uint8_t *key, int f = 1)
+    void insert(uint8_t *key, int f = 1, bool use_tower = false)
     {
+#ifdef USE_TOWER
+        uint8_t swap_key[KEY_LENGTH_4];
+        uint32_t swap_val = 0;
+        uint32_t key_uint32 = *((uint32_t *)key);
+        int result = heavy_part.insert(key, swap_key, swap_val, f);
+        uint32_t swap_key_uint32 = *((uint32_t *)swap_key);
+
+        switch (result)
+        {
+        case 0:
+            return;
+        case 1:
+            tower->insert(swap_key_uint32, 0, swap_val);
+            return;
+        case 2:
+            tower->insert(key_uint32, 0, 1);
+            return;
+        default:
+            printf("error return value !\n");
+            exit(1);
+        }
+#else
         uint8_t swap_key[KEY_LENGTH_4];
         uint32_t swap_val = 0;
         int result = heavy_part.insert(key, swap_key, swap_val, f);
-
         switch (result)
         {
         case 0:
@@ -48,6 +87,7 @@ public:
             printf("error return value !\n");
             exit(1);
         }
+#endif
     }
 
     void quick_insert(uint8_t *key, int f = 1)
@@ -55,8 +95,17 @@ public:
         heavy_part.quick_insert(key, f);
     }
 
-    int query(uint8_t *key)
+    int query(uint8_t *key, bool use_tower = false)
     {
+#ifdef USE_TOWER
+        uint32_t heavy_result = heavy_part.query(key);
+        if (heavy_result == 0 || HIGHEST_BIT_IS_1(heavy_result))
+        {
+            int light_result = tower->query(*((uint32_t *)key), 0);
+            return (int)GetCounterVal(heavy_result) + light_result;
+        }
+        return heavy_result;
+#else
         uint32_t heavy_result = heavy_part.query(key);
         if (heavy_result == 0 || HIGHEST_BIT_IS_1(heavy_result))
         {
@@ -64,8 +113,9 @@ public:
             return (int)GetCounterVal(heavy_result) + light_result;
         }
         return heavy_result;
+#endif
     }
-
+#ifndef USE_TOWER
     int query_compressed_part(uint8_t *key, uint8_t *compress_part, int compress_counter_num)
     {
         uint32_t heavy_result = heavy_part.query(key);
@@ -201,6 +251,7 @@ public:
     {
         ::operator delete(((void **)p)[-1]);
     }
+#endif
 };
 
 #endif

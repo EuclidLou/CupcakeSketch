@@ -27,9 +27,9 @@ using namespace std;
 
 typedef std::chrono::high_resolution_clock::time_point TP;
 
-inline TP now(){
-    return std::chrono::high_resolution_clock::now();
-}
+// inline TP now(){
+//     return std::chrono::high_resolution_clock::now();
+// }
 
 class FIVE_TUPLE {
 public:

@@ -8,6 +8,7 @@
 #include <omp.h>
 #include "defs.h"
 #include "hash.h"
+#include "macros.h"
 #include "../thirdparty/ElasticSketch.h"
 
 class Counter
@@ -84,7 +85,9 @@ public:
     struct u *hash;
     int left_pos;
     Counter_Sketch<memory> counter;
+    #ifdef METRICS
     Counter counter_gt;
+    #endif
 
     novel_minhash(int hash_cnt) : HASH_CNT(hash_cnt)
     {
@@ -111,10 +114,12 @@ public:
         delete[] min_hash_value_2;
     }
 
-    void insert1(data_t item, bool need_gt=false)
+    void insert1(data_t item)
     {
         int freq = counter.counter1(item);
-        if(need_gt) counter_gt.counter1(item);
+        #ifdef METRICS
+        counter_gt.counter1(item);
+        #endif
         // #pragma omp parallel for
         // for (int i = 0; i < HASH_CNT; i++)
         // {
@@ -124,10 +129,12 @@ public:
         min_hash_value_1[min_idx] = std::min(min_hash_value_1[min_idx], HASH::hash(HASH::hash(item, hash_seed[min_idx]), freq));
     }
 
-    void insert2(data_t item, bool need_gt=false)
+    void insert2(data_t item)
     {
         int freq = counter.counter2(item);
-        if(need_gt) counter_gt.counter2(item);
+        #ifdef METRICS
+        counter_gt.counter2(item);
+        #endif
         // #pragma omp parallel for
         // for (int i = 0; i < HASH_CNT; i++)
         // {
@@ -152,8 +159,10 @@ public:
         return similarity;
     }
 
-    double sketch_aae()
+
+    void sketch_aae(double* metrics)
     {
+#ifdef METRICS
         int num_key = 0;
         double AE = 0;
         double RE = 0;
@@ -186,9 +195,9 @@ public:
         double AAE = AE / num_key;
         double ARE = RE / num_key * 100;
         std::size_t total_flow = pair_freq.size();
-        LOG_RESULT("AAE: %lf, ARE: %lf%c", AAE, ARE, '%');
-        return AAE;
+        metrics[0] += AAE;
+        metrics[1] += ARE;
+#endif
     }
 };
-
 #endif

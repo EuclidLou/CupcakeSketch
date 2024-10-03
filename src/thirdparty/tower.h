@@ -35,7 +35,7 @@ public:
 
         for (uint32_t i = 1; i < h; ++i)
             counters[i] = *counters + i * actual_w;
-        cout << w << " " << h * actual_w << endl;
+        // cout << w << " " << h * actual_w << endl;
         memset(*counters, 0, sizeof(uint32_t) * h * actual_w);
         // cout << sizeof(*counters) << endl;
         hash = new BOBHash32(random_seed);
@@ -64,7 +64,7 @@ public:
             val = counter_max;
         else
             val += f;
-        counters[row_id][index / counter_per_int] = buf & ~(mask << shift) | (val << shift);
+        counters[row_id][index / counter_per_int] = (buf & ~(mask << shift)) | (val << shift);
     }
 
     inline void insert_with_hash_value(uint32_t hash_value, uint32_t row_id, uint32_t f = 1)
@@ -79,7 +79,7 @@ public:
             val = counter_max;
         else
             val += f;
-        counters[row_id][index / counter_per_int] = buf & ~(mask << shift) | (val << shift);
+        counters[row_id][index / counter_per_int] = (buf & ~(mask << shift)) | (val << shift);
     }
 
     inline void apply_with_hash_value(uint32_t hash_value, uint32_t row_id, uint32_t f = 1)
@@ -94,7 +94,7 @@ public:
             val = counter_max;
         else
             val = f;
-        counters[row_id][index / counter_per_int] = buf & ~(mask << shift) | (val << shift);
+        counters[row_id][index / counter_per_int] = (buf & ~(mask << shift)) | (val << shift);
     }
 
     inline uint32_t query(uint32_t key, uint32_t row_id)

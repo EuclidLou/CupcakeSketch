@@ -1,18 +1,19 @@
 #pragma once
 #include "sketch_minhash.h"
 #include "dataset.h"
+#include "macros.h"
 #include <fstream>
 #include <omp.h>
 
 template <int memory>
-double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "caida", int nytimes_dataset_len = 800000, int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
+double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "caida", double* metrics = NULL, int nytimes_dataset_len = 800000, 
+                            int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
 {
     LOG_DEBUG("enter enroll_novel_minhash()");
     bool is_bow = dataset_name == "docword.nytimes";
     Dataset dataset;
     Dataset_BoW dataset_bow1, dataset_bow2;
     int total_packets = 0;
-    bool need_gt = true;
 
     if (dataset_name == "caida")
     {
@@ -51,27 +52,31 @@ double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "
         if (!is_bow)
         {
             for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++)
-                nm.insert1(dataset.stream1.raw_data[i], need_gt);
+                nm.insert1(dataset.stream1.raw_data[i]);
             for (int i = 0; i < dataset.stream2.TOTAL_PACKETS; i++)
-                nm.insert2(dataset.stream2.raw_data[i], need_gt);
+                nm.insert2(dataset.stream2.raw_data[i]);
         }
         else if (is_bow)
         {
             for (int i = 0; i < dataset_bow1.TOTAL_PACKETS; i++)
-                nm.insert1(dataset_bow1.raw_data[i], need_gt);
+                nm.insert1(dataset_bow1.raw_data[i]);
             for (int i = 0; i < dataset_bow2.TOTAL_PACKETS; i++)
-                nm.insert2(dataset_bow2.raw_data[i], need_gt);
+                nm.insert2(dataset_bow2.raw_data[i]);
         }
         end = std::chrono::high_resolution_clock::now();
 
         double similarity = nm.similarity();
-        if(need_gt) nm.sketch_aae();
+        nm.sketch_aae(metrics);
         similarity_avg += similarity;
     }
     similarity_avg /= loop_time;
     auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     int MIPS = (int)(1. * total_packets / elapsed_time.count() * 1e6);
-
+    #ifdef METRICS
+    metrics[0] /= loop_time;
+    metrics[1] /= loop_time;
+    LOG_RESULT("AAE: %lf, ARE: %lf%c", metrics[0], metrics[1], '%');
+    #endif
     LOG_RESULT("cycle similarity_avg: %lf", similarity_avg);
     LOG_RESULT("cycle MIPS: %d", MIPS);
     if (fout_time != NULL)
