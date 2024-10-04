@@ -35,6 +35,11 @@ double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "
 
         total_packets = std::max(dataset_bow1.TOTAL_PACKETS, dataset_bow2.TOTAL_PACKETS);
     }
+    else if (dataset_name == "CAIDA_large")
+    {
+        dataset.init("./dataset/CAIDA_large.dat", 21);
+        total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
+    }
     else
     {
         dataset.init("./dataset/caida.dat", 21);

@@ -20,16 +20,17 @@ int main(){
   int time_repeat = REPEAT;
   int num_minhash_to_sample = K;
   double metrics[]={0.0, 0.0};
+  double gt;
   Dataset dataset;
-  dataset.init("./dataset/"+dataset_name+".dat", 4, true, true, 1.0, true);
-  double gt = dataset.similarity();
+  dataset.init("./dataset/"+dataset_name+".dat", 21, true, true, 1.0, true);
+  gt = dataset.similarity();
   double est_simi = distribution_cycle(time_repeat, MEMORY_1_24, dataset_name);   //mem = 24*len
   double est_mihs = enroll_novel_minhash<12*MEMORY_1_24>(time_repeat, num_minhash_to_sample, dataset_name, metrics); //mem = 2*<>
   double RE_simi = (est_simi - gt) / gt * 100.0;
   double RE_mihs = (est_mihs - gt) / gt * 100.0;
   LOG_RESULT("Relative Error of SimiSketch: %lf%c", RE_simi, '%');
   LOG_RESULT("Relative Error of Novel MinHash: %lf%c", RE_mihs, '%');
-  std::ofstream log_file("execution_log.txt", std::ios_base::app);
+  std::ofstream log_file("log/execution_log.txt", std::ios_base::app);
   log_file  << "Dataset: "      << std::left << std::setw(10) << std::setfill(' ') << dataset_name << "\t"
             << "K: "            << std::left << std::setw(10) << std::setfill(' ') << num_minhash_to_sample << "\t"
             << "Mem in KB: "    << std::left << std::setw(6) << std::setfill(' ') << std::setprecision(3) << MEMORY_1_24*24.0/1024.0 << "\t"

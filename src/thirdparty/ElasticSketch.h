@@ -27,7 +27,7 @@ public:
         vector<uint32_t> width;
         for (int i = 0; i < width_mul_tower.size(); i++)
         {
-            width.push_back((int)(light_mem * width_mul_tower[i]*3));
+            width.push_back((int)(light_mem * width_mul_tower[i]));
         }
         tower = new TowerSketch(width, 1, cs_tower, 0);
 #endif
