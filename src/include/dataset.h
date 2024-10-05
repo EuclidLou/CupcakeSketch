@@ -52,7 +52,7 @@ public:
     unordered_map<data_t, count_t> counter;
     unordered_map<data_t, count_t> counter1, counter2;
 
-    void init(string PATH, int size_per_item, bool separate = true, bool use_known_zipf = true, double zipf_alpha = 1.0, bool keep_log=false)
+    void init(string PATH, int size_per_item, double separate_factor = 0.5, bool separate = true, bool use_known_zipf = true, double zipf_alpha = 1.0, bool keep_log=true)
     {
         if (!use_known_zipf)
         {
@@ -191,7 +191,7 @@ public:
         }
         if(keep_log) LOG_DEBUG("Total packets: %d, Total flows: %zu", n_elements, counter.size());
 
-        stream1.TOTAL_PACKETS = n_elements / 2;
+        stream1.TOTAL_PACKETS = (int)(n_elements * separate_factor);
         stream1.raw_data = new data_t[stream1.TOTAL_PACKETS];
         for (count_t i = 0; i < stream1.TOTAL_PACKETS; i++)
         {
@@ -205,7 +205,7 @@ public:
         stream2.raw_data = new data_t[stream2.TOTAL_PACKETS];
         for (count_t i = 0; i < stream2.TOTAL_PACKETS; i++)
         {
-            stream2.raw_data[i] = raw_data[n_elements / 2 + i];
+            stream2.raw_data[i] = raw_data[stream1.TOTAL_PACKETS + i];
             stream2.counter[stream2.raw_data[i]]++;
         }
         stream2.TOTAL_FLOWS = stream2.counter.size();

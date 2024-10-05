@@ -85,7 +85,7 @@ public:
     struct u *hash;
     int left_pos;
     Counter_Sketch<memory> counter;
-    #ifdef METRICS
+    #if METRICS == 1
     Counter counter_gt;
     #endif
 
@@ -117,7 +117,7 @@ public:
     void insert1(data_t item)
     {
         int freq = counter.counter1(item);
-        #ifdef METRICS
+        #if METRICS == 1
         counter_gt.counter1(item);
         #endif
         // #pragma omp parallel for
@@ -132,7 +132,7 @@ public:
     void insert2(data_t item)
     {
         int freq = counter.counter2(item);
-        #ifdef METRICS
+        #if METRICS == 1
         counter_gt.counter2(item);
         #endif
         // #pragma omp parallel for
@@ -162,7 +162,7 @@ public:
 
     void sketch_aae(double* metrics)
     {
-#ifdef METRICS
+#if METRICS == 1
         int num_key = 0;
         double AE = 0;
         double RE = 0;

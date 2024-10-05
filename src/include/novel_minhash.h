@@ -6,45 +6,10 @@
 #include <omp.h>
 
 template <int memory>
-double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "caida", double* metrics = NULL, int nytimes_dataset_len = 800000, 
-                            int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
+double enroll_novel_minhash(int loop_time, int hash_cnt, Dataset& dataset, double* metrics = NULL, std::ofstream *fout_time = NULL)
 {
     LOG_DEBUG("enter enroll_novel_minhash()");
-    bool is_bow = dataset_name == "docword.nytimes";
-    Dataset dataset;
-    Dataset_BoW dataset_bow1, dataset_bow2;
-    int total_packets = 0;
-
-    if (dataset_name == "caida")
-    {
-        dataset.init("./dataset/caida.dat", 21);
-        total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
-    }
-    else if (dataset_name.find("zipf") != string::npos)
-    {
-        dataset.init("./dataset/" + dataset_name + ".dat", 4);
-        total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
-    }
-    else if (dataset_name == "docword.nytimes")
-    {
-        dataset_bow1.init("./dataset/docword.nytimes.txt", nytimes_dataset_len, 3);
-        dataset_bow2.init("./dataset/docword.nytimes.txt", nytimes_dataset_len, second_dataset_start);
-
-        LOG_DEBUG("dataset_bow1.TOTAL_PACKETS: %d", dataset_bow1.TOTAL_PACKETS);
-        LOG_DEBUG("dataset_bow2.TOTAL_PACKETS: %d", dataset_bow2.TOTAL_PACKETS);
-
-        total_packets = std::max(dataset_bow1.TOTAL_PACKETS, dataset_bow2.TOTAL_PACKETS);
-    }
-    else if (dataset_name == "CAIDA_large")
-    {
-        dataset.init("./dataset/CAIDA_large.dat", 21);
-        total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
-    }
-    else
-    {
-        dataset.init("./dataset/caida.dat", 21);
-        total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
-    }
+    int total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
 
     double similarity_avg = 0;
     auto start = std::chrono::high_resolution_clock::now(), end = std::chrono::high_resolution_clock::now();
@@ -54,20 +19,10 @@ double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "
         novel_minhash<memory> nm(hash_cnt);
 
         start = std::chrono::high_resolution_clock::now();
-        if (!is_bow)
-        {
-            for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++)
-                nm.insert1(dataset.stream1.raw_data[i]);
-            for (int i = 0; i < dataset.stream2.TOTAL_PACKETS; i++)
-                nm.insert2(dataset.stream2.raw_data[i]);
-        }
-        else if (is_bow)
-        {
-            for (int i = 0; i < dataset_bow1.TOTAL_PACKETS; i++)
-                nm.insert1(dataset_bow1.raw_data[i]);
-            for (int i = 0; i < dataset_bow2.TOTAL_PACKETS; i++)
-                nm.insert2(dataset_bow2.raw_data[i]);
-        }
+        for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++)
+            nm.insert1(dataset.stream1.raw_data[i]);
+        for (int i = 0; i < dataset.stream2.TOTAL_PACKETS; i++)
+            nm.insert2(dataset.stream2.raw_data[i]);
         end = std::chrono::high_resolution_clock::now();
 
         double similarity = nm.similarity();
@@ -77,7 +32,7 @@ double enroll_novel_minhash(int loop_time, int hash_cnt, string dataset_name = "
     similarity_avg /= loop_time;
     auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     int MIPS = (int)(1. * total_packets / elapsed_time.count() * 1e6);
-    #ifdef METRICS
+    #if METRICS == 1
     metrics[0] /= loop_time;
     metrics[1] /= loop_time;
     LOG_RESULT("AAE: %lf, ARE: %lf%c", metrics[0], metrics[1], '%');

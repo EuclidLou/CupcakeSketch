@@ -14,7 +14,7 @@ class ElasticSketch
     static constexpr int light_mem = tot_memory_in_bytes - heavy_mem;
 
     HeavyPart<bucket_num> heavy_part;
-#ifdef USE_TOWER
+#if USE_TOWER == 1
     TowerSketch *tower;
 #else
     LightPart<light_mem> light_part;
@@ -23,7 +23,7 @@ class ElasticSketch
 public:
     ElasticSketch()
     {
-#ifdef USE_TOWER
+#if USE_TOWER == 1
         vector<uint32_t> width;
         for (int i = 0; i < width_mul_tower.size(); i++)
         {
@@ -36,14 +36,14 @@ public:
     void clear()
     {
         heavy_part.clear();
-#ifndef USE_TOWER
+#if USE_TOWER == 0
         light_part.clear();
 #endif
     }
 
     void insert(uint8_t *key, int f = 1, bool use_tower = false)
     {
-#ifdef USE_TOWER
+#if USE_TOWER == 1
         uint8_t swap_key[KEY_LENGTH_4];
         uint32_t swap_val = 0;
         int result = heavy_part.insert(key, swap_key, swap_val, f);
@@ -102,7 +102,7 @@ public:
 
     int query(uint8_t *key, bool use_tower = false)
     {
-#ifdef USE_TOWER
+#if USE_TOWER == 1
         uint32_t heavy_result = heavy_part.query(key);
         if (heavy_result == 0 || HIGHEST_BIT_IS_1(heavy_result))
         {
@@ -120,7 +120,7 @@ public:
         return heavy_result;
 #endif
     }
-#ifndef USE_TOWER
+#if USE_TOWER == 0
     int query_compressed_part(uint8_t *key, uint8_t *compress_part, int compress_counter_num)
     {
         uint32_t heavy_result = heavy_part.query(key);

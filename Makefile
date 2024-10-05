@@ -3,7 +3,7 @@ CXXFLAGS := -Wall -Werror -Wno-reorder-ctor -Wno-unused-function -Wno-unused-var
 FFLAGS :=
 BFLAGS := -d -v
 LOGMODE :=
-
+CXXFLAGS += $(MYFLAGS)
 
 DEBUG_CXXFLAGS := $(CXXFLAGS) -g -O0
 # LOGMODE = DEBUGMODE

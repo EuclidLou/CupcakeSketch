@@ -28,13 +28,18 @@ public:
 
     void clear()
     {
+        #if USE_CS == 0
         memset(counters, 0, counter_num);
+        #else
+        memset(counters, 128, counter_num);
+        #endif
         memset(mice_dist, 0, sizeof(int) * 256);
     }
 
     /* insertion */
     void insert(uint8_t *key, int f = 1)
     {
+        #if USE_CS == 0
         uint32_t hash_val = (uint32_t)bobhash->run((const char *)key, KEY_LENGTH_4);
         uint32_t pos = hash_val % (uint32_t)counter_num;
 
@@ -46,10 +51,27 @@ public:
 
         mice_dist[old_val]--;
         mice_dist[new_val]++;
+        #else
+        uint32_t hash_val = (uint32_t)bobhash->run((const char *)key, KEY_LENGTH_4);
+        uint32_t hash_val_ = (uint32_t)bobhash->run((const char *)key, 2);
+        uint32_t pos = hash_val % (uint32_t)counter_num;
+        uint32_t coe = (hash_val_ % 2) * 2 - 1;
+
+        int old_val = (int)counters[pos];
+        int new_val = old_val + f * coe;
+
+        new_val = new_val < 255 ? new_val : 255;
+        new_val = new_val > 0 ? new_val : 0;
+        counters[pos] = (uint8_t)new_val;
+
+        mice_dist[old_val]--;
+        mice_dist[new_val]++;
+        #endif
     }
 
     void swap_insert(uint8_t *key, int f)
     {
+        #if USE_CS == 0
         uint32_t hash_val = (uint32_t)bobhash->run((const char *)key, KEY_LENGTH_4);
         uint32_t pos = hash_val % (uint32_t)counter_num;
 
@@ -63,15 +85,41 @@ public:
             mice_dist[old_val]--;
             mice_dist[new_val]++;
         }
+        #else
+        uint32_t hash_val = (uint32_t)bobhash->run((const char *)key, KEY_LENGTH_4);
+        uint32_t hash_val_ = (uint32_t)bobhash->run((const char *)key, 2);
+        uint32_t pos = hash_val % (uint32_t)counter_num;
+        uint32_t coe = (hash_val_ % 2) * 2 - 1;
+
+        f = f * coe + 128;
+        f = f < 255 ? f : 255;
+        f = f > 0 ? f : 0;
+        if ((counters[pos]>=128&&counters[pos]<f)||(counters[pos]<128&&counters[pos]>f))
+        {
+            int old_val = (int)counters[pos];
+            counters[pos] = (uint8_t)f;
+            int new_val = (int)counters[pos];
+
+            mice_dist[old_val]--;
+            mice_dist[new_val]++;
+        }
+        #endif
     }
 
     /* query */
     int query(uint8_t *key)
     {
+        #if USE_CS == 0
         uint32_t hash_val = (uint32_t)bobhash->run((const char *)key, KEY_LENGTH_4);
         uint32_t pos = hash_val % (uint32_t)counter_num;
-
         return (int)counters[pos];
+        #else
+        uint32_t hash_val = (uint32_t)bobhash->run((const char *)key, KEY_LENGTH_4);
+        uint32_t hash_val_ = (uint32_t)bobhash->run((const char *)key, 2);
+        uint32_t pos = hash_val % (uint32_t)counter_num;
+        uint32_t coe = (hash_val_ % 2) * 2 - 1;
+        return ((int)counters[pos]-128)*coe;
+        #endif
     }
 
     /* compress */
