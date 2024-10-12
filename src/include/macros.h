@@ -8,13 +8,13 @@
 #define USE_CS          1
 #define METRICS         1
 #define MEMORY_1_24     (int)(1024)
-#define K               100000
+#define K               320000
 #define DATASET         "caida"
 #define ITEM_SIZE       21
 #define REPEAT          20
 #define S_FACTOR        0.5
-#define HEAVY_BIAS      0.5
-#define SWAP_FACTOR     2
+#define HEAVY_BIAS      1
+#define SWAP_FACTOR     3
 
 
 

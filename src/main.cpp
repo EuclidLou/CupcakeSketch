@@ -41,9 +41,11 @@ int main(){
                 << "With Tower \t"
                 #else
                 #if USE_CS == 1
-                << "With CS    \t"
+                << "Level-1 CS \t"
+                #elif USE_CS == 3
+                << "Level-3 CS \t"
                 #else
-                << "W/O  Tower \t"
+                << "Elastic    \t"
                 #endif
                 #endif
                 #if METRICS == 1
