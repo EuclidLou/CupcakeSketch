@@ -38,13 +38,13 @@ template <int memory>
 class Counter_Sketch
 {
 public:
-    ElasticSketch<memory / 256, memory> *sketch1;
-    ElasticSketch<memory / 256, memory> *sketch2;
+    ElasticSketch<(int)(memory / 256 * HEAVY_BIAS), memory> *sketch1;
+    ElasticSketch<(int)(memory / 256 * HEAVY_BIAS), memory> *sketch2;
 
     Counter_Sketch()
     {
-        sketch1 = new ElasticSketch<memory / 256, memory>();
-        sketch2 = new ElasticSketch<memory / 256, memory>();
+        sketch1 = new ElasticSketch<(int)(memory / 256 * HEAVY_BIAS), memory>();
+        sketch2 = new ElasticSketch<(int)(memory / 256 * HEAVY_BIAS), memory>();
     }
     ~Counter_Sketch()
     {
@@ -178,7 +178,7 @@ public:
             pair_freq[key].gt_freq += gt_freq;
             pair_freq[key].est_freq += est_freq;
             AE += (est_freq - gt_freq);
-            RE += static_cast<double>(est_freq - gt_freq) / gt_freq;
+            RE += static_cast<double>(abs(est_freq - gt_freq)) / gt_freq;
             num_key += 1;
         }
         for (const auto& pair : counter_gt.freq2)
@@ -189,7 +189,7 @@ public:
             pair_freq[key].gt_freq += gt_freq;
             pair_freq[key].est_freq += est_freq;
             AE += (est_freq - gt_freq);
-            RE += static_cast<double>(est_freq - gt_freq) / gt_freq;
+            RE += static_cast<double>(abs(est_freq - gt_freq)) / gt_freq;
             num_key += 1;
         }
         double AAE = AE / num_key;

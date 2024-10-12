@@ -12,6 +12,7 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
+#include "../include/macros.h"
 
 #define COUNTER_PER_BUCKET 8
 #define MAX_VALID_COUNTER 7
@@ -30,7 +31,7 @@
 
 #define GetCounterVal(val) ((uint32_t)((val)&0x7FFFFFFF))
 
-#define JUDGE_IF_SWAP(min_val, guard_val) ((guard_val) > ((min_val) << 3))
+#define JUDGE_IF_SWAP(min_val, guard_val) ((guard_val) > ((min_val) << SWAP_FACTOR))
 
 #define UPDATE_GUARD_VAL(guard_val) ((guard_val) + 1)
 
