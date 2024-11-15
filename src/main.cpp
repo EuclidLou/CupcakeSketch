@@ -36,7 +36,7 @@ int main(){
                 << "Mem in KB: "    << std::left << std::setw(6) << std::setfill(' ') << std::setprecision(3) << MEMORY_1_24*24.0/1024.0 << "\t"
                 << "GT: "           << std::fixed << std::setprecision(6) << gt << "\t"
                 << "Simi: "         << std::fixed << std::setprecision(6) << est_simi << "@" << std::fixed << std::setprecision(3) << RE_simi << "%\t"
-                << "Ours: "         << std::fixed << std::setprecision(6) << est_mihs << "@" << std::fixed << std::setprecision(3) << RE_mihs << "%\t\t"
+                << "Ours: "         << std::fixed << std::setprecision(6) << est_mihs << "@" << std::fixed << std::setprecision(3) << RE_mihs << "%\t"
                 #if USE_TOWER == 1
                 << "With Tower \t"
                 #else
@@ -45,8 +45,13 @@ int main(){
                 #elif USE_CS == 3
                 << "Level-3 CS \t"
                 #else
-                << "Elastic    \t"
+                << "Level-1 CM \t"
                 #endif
+                #endif
+                #if DHASH == 0
+                << "S-Hash     \t"
+                #else
+                << "D-Hash     \t"
                 #endif
                 #if METRICS == 1
                 << "AAE: "          << std::left << std::setfill(' ') << std::setw(10) << std::fixed << std::setprecision(3) << metrics[0] << "\t" 

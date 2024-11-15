@@ -162,7 +162,7 @@ public:
             }
         }
         similarity = 1.0 * same_hash / all_hash;
-        LOG_DEBUG("same_hash: %d, all_hash: %d", same_hash, all_hash);
+        // LOG_DEBUG("same_hash: %d, all_hash: %d", same_hash, all_hash);
         // LOG_RESULT("similarity: %lf", similarity);
         // LOG_DEBUG("exit similarity_minhash()");
         return similarity;
