@@ -74,7 +74,7 @@ public:
 };
 
 template <int memory>
-class novel_minhash
+class cupcake_sketch
 {
 public:
     int HASH_LEN, HASH_CNT;
@@ -89,7 +89,7 @@ public:
     Counter counter_gt;
     #endif
 
-    novel_minhash(int hash_cnt) : HASH_CNT(hash_cnt)
+    cupcake_sketch(int hash_cnt) : HASH_CNT(hash_cnt)
     {
         srand(clock());
         index_s = rand();
@@ -107,7 +107,7 @@ public:
         }
     }
 
-    ~novel_minhash()
+    ~cupcake_sketch()
     {
         delete[] hash_seed;
         delete[] min_hash_value_1;

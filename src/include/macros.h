@@ -8,10 +8,10 @@
 #define USE_CS          1
 #define METRICS         1
 #define DHASH           1
-#define MEMORY_1_24     (int)(8*1024)     //128*n
-#define K               80000
-#define DATASET         "zipf_1.0"
-#define ITEM_SIZE       4
+#define MEMORY_1_24     (int)(256*8)     //128*n
+#define K               8192
+#define DATASET         "caida"
+#define ITEM_SIZE       15
 #define REPEAT          1
 #define S_FACTOR        0.5
 #define HEAVY_BIAS      1
