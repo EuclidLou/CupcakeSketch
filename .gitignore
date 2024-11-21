@@ -1,7 +1,6 @@
 /.vscode
 /build
-*.dat
-*.parquet
+/dataset
 /exec
 /debug
 /execution_log.txt
