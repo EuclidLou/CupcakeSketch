@@ -4,6 +4,7 @@ FFLAGS :=
 BFLAGS := -d -v
 LOGMODE :=
 CXXFLAGS += $(MYFLAGS)
+DIRFLAG ?= exp
 
 DEBUG_CXXFLAGS := $(CXXFLAGS) -g -O0
 # LOGMODE = DEBUGMODE
@@ -23,11 +24,11 @@ DEBUGER := lldb
 
 # Directories
 TOP_DIR := $(shell pwd)
-TARGET_EXEC := exp
+TARGET_EXEC := $(DIRFLAG)
 DEBUG_EXEC := debug.out
 SRC_DIR := $(TOP_DIR)/src
 EXEC_DIR ?= $(TOP_DIR)/exec
-BUILD_DIR ?= $(TOP_DIR)/build
+BUILD_DIR ?= $(TOP_DIR)/build/$(DIRFLAG)
 DEBUG_DIR ?= $(TOP_DIR)/debug
 
 # Source files & target files

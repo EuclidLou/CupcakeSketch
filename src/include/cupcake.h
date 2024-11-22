@@ -74,7 +74,7 @@ public:
 };
 
 template <int memory>
-class novel_minhash
+class cupcake_sketch
 {
 public:
     int HASH_LEN, HASH_CNT;
@@ -89,7 +89,7 @@ public:
     Counter counter_gt;
     #endif
 
-    novel_minhash(int hash_cnt) : HASH_CNT(hash_cnt)
+    cupcake_sketch(int hash_cnt) : HASH_CNT(hash_cnt)
     {
         srand(clock());
         index_s = rand();
@@ -107,7 +107,7 @@ public:
         }
     }
 
-    ~novel_minhash()
+    ~cupcake_sketch()
     {
         delete[] hash_seed;
         delete[] min_hash_value_1;
@@ -162,7 +162,7 @@ public:
             }
         }
         similarity = 1.0 * same_hash / all_hash;
-        LOG_DEBUG("same_hash: %d, all_hash: %d", same_hash, all_hash);
+        // LOG_DEBUG("same_hash: %d, all_hash: %d", same_hash, all_hash);
         // LOG_RESULT("similarity: %lf", similarity);
         // LOG_DEBUG("exit similarity_minhash()");
         return similarity;

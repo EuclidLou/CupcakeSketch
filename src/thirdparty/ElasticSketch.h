@@ -45,7 +45,7 @@ public:
     {
 #if USE_TOWER == 1
         uint8_t swap_key[KEY_LENGTH_4];
-        uint32_t swap_val = 0;
+        uint32_t swap_val = light_part.query(key);
         int result = heavy_part.insert(key, swap_key, swap_val, f);
         uint32_t old_val;
 
@@ -71,7 +71,7 @@ public:
         }
 #else
         uint8_t swap_key[KEY_LENGTH_4];
-        uint32_t swap_val = 0;
+        uint32_t swap_val = (light_part.query(key) < 0 ? 0 : light_part.query(key));
         int result = heavy_part.insert(key, swap_key, swap_val, f);
         switch (result)
         {

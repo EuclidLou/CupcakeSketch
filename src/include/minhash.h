@@ -77,16 +77,16 @@ public:
 
 double similarity_minhash_cm(MINHASH_CM *minhash1, MINHASH_CM *minhash2)
 {
-    LOG_DEBUG("into similarity_minhash()");
+    // LOG_DEBUG("into similarity_minhash()");
     double similarity = 0;
     int same_hash = 0, all_hash = minhash1->HASH_CNT;
     for (int i = 0; i < all_hash; i++)
         if (minhash1->min_hash_value[i] == minhash2->min_hash_value[i])
             same_hash++;
     similarity = 1.0 * same_hash / all_hash;
-    LOG_DEBUG("same_hash: %d, all_hash: %d", same_hash, all_hash);
-    LOG_RESULT("similarity: %lf", similarity);
-    LOG_DEBUG("exit similarity_minhash()");
+    // LOG_DEBUG("same_hash: %d, all_hash: %d", same_hash, all_hash);
+    // LOG_RESULT("similarity: %lf", similarity);
+    // LOG_DEBUG("exit similarity_minhash()");
     return similarity;
 }
 
