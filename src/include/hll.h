@@ -339,6 +339,7 @@ public:
         bucket1 = new uint8_t[bucketnum];
         bucket2 = new uint8_t[bucketnum];
         bucket_num = bucketnum;
+        srand(time(NULL));
         seed = rand();
         index_s = rand();
         hash1 = new struct u[hash_len];

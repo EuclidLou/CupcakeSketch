@@ -1,6 +1,8 @@
 #pragma once
 #include "hll.h"
 #include "dataset.h"
+#include <cmath>
+#include <cstdint>
 
 double distribution_hll_cm(int loop_time, int len, string dataset_name = "caida", int nytimes_dataset_len = 800000, int second_dataset_start = 800003, std::ofstream *fout_time = NULL)
 {
@@ -86,13 +88,15 @@ double distribution_hll_cm(int loop_time, int len, string dataset_name = "caida"
     return similarity_avg;
 }
 
-void test_hll_excat()
+double test_hll_excat(int sigature_size, uint64_t memory_size)
 {
     Dataset dataset;
-    dataset.init("./dataset/caida.dat", 21);
+    dataset.init("./dataset/zipf_0.5.dat", 4);
     double real_similarity = dataset.similarity();
-    LOG_INFO("The real size of 1:%d,real size of 2:%d", dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
-    hyperloglog_excat hll(2048);
+    printf("The real size of 1:%d,real size of 2:%d\n", dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
+    int bucketnum = 1 << static_cast<int>(log2(sigature_size / 8));
+    printf("bucknum: %d\n", bucketnum);
+    hyperloglog_hash hll(bucketnum, memory_size / 8); // todo: change bucketnum to keep the signature size to 80K
 
     for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++)
     {
@@ -108,6 +112,10 @@ void test_hll_excat()
     double similarity = double(size_1 + size_2 - size_1_2) / double(size_1_2);
     LOG_INFO("TEST SIMILARITY THROUGH HYPERLOGLOG WITH EXCAT HASH MAP");
     LOG_RESULT("The size of 1:%lu,size of 2:%lu,size of 1 and 2:%lu,similarity:%lf", size_1, size_2, size_1_2, similarity);
+    
+    // printf("TEST SIMILARITY THROUGH HYPERLOGLOG WITH EXCAT HASH MAP");
+    printf("The size of 1:%lu,size of 2:%lu,size of 1 and 2:%lu,similarity:%lf\n", size_1, size_2, size_1_2, similarity);
+    return similarity;
 }
 
 double distribution_hll_hash(int loop_time, int len, string dataset_name = "caida", int nytimes_dataset_len = 800000, int second_dataset_start = 800003, std::ofstream *fout_time = NULL)

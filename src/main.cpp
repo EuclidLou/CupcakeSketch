@@ -5,7 +5,7 @@
 // #include "include/test_elastic.h"
 #include "include/test_cycle.h"
 #include "include/test_minhash.h"
-// #include "include/test_hll.h"
+#include "include/test_hll.h"
 // #include "include/test_maxloghash.h"
 #include "include/test_sample.h"
 #include "include/test_cupcake.h"
@@ -13,6 +13,7 @@
 #include <fstream>
 #include <ctime>
 #include <string>
+#include "logger.h"
 #include "macros.h"
 
 vector<double> postprocess(const std::vector<double>& similarity, double gt){
