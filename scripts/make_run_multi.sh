@@ -6,12 +6,13 @@ USE_TOWER=0
 USE_CS_LIST=(1)
 METRICS=0
 # MEMORY_LIST=($(seq 1 1 128 | awk '{print $1*256}'))
-MEMORY_LIST=($((256*128)))
-K_LIST=($(seq 2 2 256 | awk '{print $1*1}'))
-# K_LIST=(80000)
-DATASET_LIST=("caida")
+MEMORY_LIST=($((16*1024*1024)))
+# K_LIST=($(seq 2 2 256 | awk '{print $1*1}'))
+K_LIST=(2 4 8 16 32 64 128 256)
+# K_LIST=(1024)
+DATASET_LIST=("zipf_0.5" "caida" "webdocs_form01" "wikipedia_30")
 # DATASET_LIST=("_zipf_0.4" "_zipf_0.5" "_zipf_0.6" "_zipf_0.7" "_zipf_0.8" "_zipf_0.9" "_zipf_0.10" "_zipf_0.11" "_zipf_0.12" "_zipf_0.13" "_zipf_0.14" "_zipf_0.15" "_zipf_0.16" "_zipf_0.17" "_zipf_0.18" "_zipf_0.19" "_zipf_0.20")
-ITEM_SIZE=15
+ITEM_SIZE=4
 REPEAT=10
 S_FACTOR=0.5
 HEAVY_BIAS=1
@@ -38,6 +39,10 @@ compile_and_run() {
         ITEM_SIZE=8
     elif [ "$DATASET" = "CAIDA_large" ]; then
         ITEM_SIZE=15
+    elif [ "$DATASET" = "zipf_0.5" ]; then
+        ITEM_SIZE=4
+    elif [ "$DATASET" = "wikipedia_30" ]; then
+        ITEM_SIZE=4
     fi
 
     echo "Building project with USE_CS=$use_cs, MEMORY_1_24=$memory and K=$k on $dataset"

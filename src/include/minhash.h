@@ -68,6 +68,7 @@ public:
     void insert(data_t item)
     {
         int min_cm_value = get_value_from_cm(item);
+        // #pragma omp parallel for
         for (int i = 0; i < HASH_CNT; i++)
         {
             min_hash_value[i] = std::min(min_hash_value[i], HASH::hash(HASH::hash(item, hash_seed[i]), min_cm_value));
