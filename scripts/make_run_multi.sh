@@ -3,15 +3,21 @@
 # 定义需要调试的宏
 USE_TOWER=0
 # USE_CS_LIST=(0 1 3)
-USE_CS_LIST=(1)
+USE_CS_LIST=(0)
 METRICS=0
-# MEMORY_LIST=($(seq 1 1 128 | awk '{print $1*256}'))
-MEMORY_LIST=($((16*1024*1024)))
-# K_LIST=($(seq 2 2 256 | awk '{print $1*1}'))
+# MEMORY_LIST=($(seq 2 2 16384 | awk '{print $1*1024}'))
+MEMORY_LIST=($((512*1024)))
+# MEMORY_LIST=( $((1024*1024)) $((512*1024)) $((256*1024)) $((128*1024)) $((64*1024)) $((32*1024)) $((16*1024)) $((8*1024)))
+# MEMORY_LIST=($((256)) $((512)) $((1024)) $((2048)) $((4*1024)) $((8*1024)) $((16*1024)) $((32*1024)) $((64*1024)) $((128*1024)) $((256*1024)) $((512*1024)) $((1024*1024)) $((2*1024*1024)) $((4*1024*1024)) $((8*1024*1024)))
+# K_LIST=($(seq 2 2 1024 | awk '{print $1*1}'))
 K_LIST=(2 4 8 16 32 64 128 256)
-# K_LIST=(1024)
-DATASET_LIST=("zipf_0.5" "caida" "webdocs_form01" "wikipedia_30")
-# DATASET_LIST=("_zipf_0.4" "_zipf_0.5" "_zipf_0.6" "_zipf_0.7" "_zipf_0.8" "_zipf_0.9" "_zipf_0.10" "_zipf_0.11" "_zipf_0.12" "_zipf_0.13" "_zipf_0.14" "_zipf_0.15" "_zipf_0.16" "_zipf_0.17" "_zipf_0.18" "_zipf_0.19" "_zipf_0.20")
+# K_LIST=(3 6 14 30 60 120 250 500 1000 2000 4000)
+# K_LIST=(1000)
+# K_LIST=(1024 2048 4096 8192 16384 32768 65536)
+DATASET_LIST=("wikipedia_30")
+# DATASET_LIST=("webdocs_form01")
+# DATASET_LIST=("_zipf_1.2" "CAIDA_large" "webdocs_form01" "wikipedia_30")
+# DATASET_LIST=("_zipf_0.5" "_zipf_0.6" "_zipf_0.7" "_zipf_0.8" "_zipf_0.9" "_zipf_1.0" "_zipf_1.1" "_zipf_1.2" "_zipf_1.3" "_zipf_1.4" "_zipf_1.5" "_zipf_1.6" "_zipf_1.7" "_zipf_1.8" "_zipf_1.9" "_zipf_2.0")
 ITEM_SIZE=4
 REPEAT=10
 S_FACTOR=0.5
@@ -39,7 +45,7 @@ compile_and_run() {
         ITEM_SIZE=8
     elif [ "$DATASET" = "CAIDA_large" ]; then
         ITEM_SIZE=15
-    elif [ "$DATASET" = "zipf_0.5" ]; then
+    elif [ "$DATASET" = "_zipf_1.2" ]; then
         ITEM_SIZE=4
     elif [ "$DATASET" = "wikipedia_30" ]; then
         ITEM_SIZE=4

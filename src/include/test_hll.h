@@ -88,33 +88,40 @@ double distribution_hll_cm(int loop_time, int len, string dataset_name = "caida"
     return similarity_avg;
 }
 
-double test_hll_excat(int sigature_size, uint64_t memory_size)
+vector<double> test_hyperloglog(int loop_time, uint64_t memory_size, int sigature_size, Dataset &dataset)
 {
-    Dataset dataset;
-    dataset.init("./dataset/zipf_0.5.dat", 4);
-    double real_similarity = dataset.similarity();
-    printf("The real size of 1:%d,real size of 2:%d\n", dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
-    int bucketnum = 1 << static_cast<int>(log2(sigature_size / 8));
-    printf("bucknum: %d\n", bucketnum);
-    hyperloglog_hash hll(bucketnum, memory_size / 8); // todo: change bucketnum to keep the signature size to 80K
-
-    for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++)
-    {
-        hll.insert1(dataset.stream1.raw_data[i]);
-    }
-    for (int i = 0; i < dataset.stream2.TOTAL_PACKETS; i++)
-    {
-        hll.insert2(dataset.stream2.raw_data[i]);
-    }
-    uint64_t size_1 = hll.get_estimated_size1();
-    uint64_t size_2 = hll.get_estimated_size2();
-    uint64_t size_1_2 = hll.get_estimated_size_1and2();
-    double similarity = double(size_1 + size_2 - size_1_2) / double(size_1_2);
-    LOG_INFO("TEST SIMILARITY THROUGH HYPERLOGLOG WITH EXCAT HASH MAP");
-    LOG_RESULT("The size of 1:%lu,size of 2:%lu,size of 1 and 2:%lu,similarity:%lf", size_1, size_2, size_1_2, similarity);
+    LOG_DEBUG("into test_hyperloglog()");
+    int total_packets = std::max(dataset.stream1.TOTAL_PACKETS, dataset.stream2.TOTAL_PACKETS);
+    vector<double>similarity(loop_time);
+    auto start = std::chrono::high_resolution_clock::now(), end = std::chrono::high_resolution_clock::now();
     
+    for (int i = 0; i < loop_time; i++)
+    {
+        int bucketnum = 1 << static_cast<int>(log2(sigature_size * 8));
+        // hyperloglog_hash hll(bucketnum, memory_size/16);
+        // hyperloglog_excat hll(bucketnum);
+        hyperloglog_cm   hll(bucketnum, memory_size/8);
+        // hyperloglog_cs   hll(bucketnum, memory_size/8);
+        start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < dataset.stream1.TOTAL_PACKETS; i++){
+            hll.insert1(dataset.stream1.raw_data[i]);
+        }
+        for (int i = 0; i < dataset.stream2.TOTAL_PACKETS; i++){
+            hll.insert2(dataset.stream2.raw_data[i]);
+        }
+        similarity[i] = hll.similarity();
+        end = std::chrono::high_resolution_clock::now();
+    }
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    int MIPS = (int)(1. * total_packets / elapsed_time.count() * 1e6);
+    LOG_INFO("TEST SIMILARITY THROUGH HYPERLOGLOG WITH EXCAT HASH MAP");
+    LOG_RESULT("hll cm similarity_avg: %lf", std::accumulate(similarity.begin(), similarity.end(), 0.0) / loop_time);
+    LOG_RESULT("hll cm MIPS: %d", MIPS);
+    LOG_DEBUG("exit distribution_hll_cm()\n");
+    // LOG_RESULT("The size of 1:%lu,size of 2:%lu,size of 1 and 2:%lu,similarity:%lf", size_1, size_2, size_1_2, 
+    //             std::accumulate(similarity.begin(), similarity.end(), 0.0) / loop_time);
     // printf("TEST SIMILARITY THROUGH HYPERLOGLOG WITH EXCAT HASH MAP");
-    printf("The size of 1:%lu,size of 2:%lu,size of 1 and 2:%lu,similarity:%lf\n", size_1, size_2, size_1_2, similarity);
+    // printf("The size of 1:%lu,size of 2:%lu,size of 1 and 2:%lu,similarity:%lf\n", size_1, size_2, size_1_2, similarity);
     return similarity;
 }
 

@@ -16,7 +16,7 @@ public:
     uint32_t *freq_1, *freq_2;
     int *merge;
 
-    SAMPLE(int mem, int len) : MEM(mem/16), LEN(len/2)
+    SAMPLE(int mem, int len) : MEM(mem/16), LEN(len)
     {
         srand(clock());
         seed = rand();

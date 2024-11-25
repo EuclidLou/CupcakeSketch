@@ -9,8 +9,8 @@
 #include <map>
 #include <unordered_map>
 using namespace std;
-#define GET_BUCKET_INDEX(x) (x >> 50) & 0x3fff // get the bucket index with the highest 14 bits
-#define GET_COUNT_KEY(x) (x & 0x3ffffffffffff) // get the count key with the lowest 50 bits
+#define GET_BUCKET_INDEX(x) (x >> 40) & 0xffffff
+#define GET_COUNT_KEY(x) (x & 0xffffffffff)
 
 
 class hyperloglog_cm
@@ -159,12 +159,204 @@ public:
         uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
         return num;
     }
-    double similarity(){
-        uint64_t size1=get_estimated_size1();
-        uint64_t size2=get_estimated_size2();
-        uint64_t size1_2=get_estimated_size_1and2();
-        return double(size1+size2-size1_2)/double(size1_2);
+    uint64_t get_estimated_size_1or2()
+    {
+        double all = 0;
+        for (int i = 0; i < bucket_num; i++)
+        {
+            uint8_t m=std::min(bucket1[i],bucket2[i]);
+            all += (double)1 / (double)(1 << m);
+        }
+        // printf("all:%f",all);
+        double constant = get_constant(bucket_num);
+        uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
+        return num;
     }
+    double similarity(){
+        uint64_t size1I2 = get_estimated_size_1or2();
+        uint64_t size1U2=get_estimated_size_1and2();
+        return double(size1I2)/double(size1U2);
+    }
+    // double similarity(){
+    //     uint64_t size1=get_estimated_size1();
+    //     uint64_t size2=get_estimated_size2();
+    //     uint64_t size1_2=get_estimated_size_1and2();
+    //     return double(size1+size2-size1_2)/double(size1_2);
+    // }
+};
+
+class hyperloglog_cs
+{
+public:
+    uint8_t *bucket1;
+    uint8_t *bucket2;
+    seed_t seed;
+    seed_t cs_s;
+    int bucket_num;
+    int *cs1;
+    int *cs2;
+    int CS_LEN;
+    hyperloglog_cs(int bucketnum, int cs_len)
+    {
+        bucket1 = new uint8_t[bucketnum];
+        bucket2 = new uint8_t[bucketnum];
+        bucket_num = bucketnum;
+        seed = rand();
+        cs_s = rand();
+        cs1 = new int[cs_len];
+        cs2 = new int[cs_len];
+        CS_LEN = cs_len;
+        memset(cs1, 0, sizeof(int) * cs_len);
+        memset(cs2, 0, sizeof(int) * cs_len);
+        memset(bucket1, 0, sizeof(uint8_t) * bucketnum);
+        memset(bucket2, 0, sizeof(uint8_t) * bucketnum);
+    }
+    ~hyperloglog_cs()
+    {
+        delete[] cs1;
+        delete[] cs2;
+        delete[] bucket1;
+        delete[] bucket2;
+    }
+    int get_index_from_cs1(data_t item)
+    {
+        int index = HASH::hash(item, cs_s) % CS_LEN;
+        int cox = 1 - 2*(HASH::hash(item, cs_s) % 2);
+        cs1[index] += index*cox;
+        return cs1[index]*cox;
+    }
+    int get_index_from_cs2(data_t item)
+    {
+        int index = HASH::hash(item, cs_s) % CS_LEN;
+        int cox = 1 - 2*(HASH::hash(item, cs_s) % 2);
+        cs2[index] += index*cox;
+        return cs2[index]*cox;
+    }
+    uint64_t hll_hash(const char *s, size_t len, uint64_t seed)
+    {
+        return NAMESPACE_FOR_HASH_FUNCTIONS::Hash64WithSeed(s, len, seed);
+    }
+    uint8_t getcount(uint64_t key)
+    {
+        for (uint8_t i = 49; i >= 0; i--)
+        {
+            if (((1 << i) & key) != 0)
+            {
+                uint8_t ans = 50 - i;
+                // printf("key:%llx,i:%d\n",key,i);
+                return ans;
+            }
+        }
+        return 0;
+    }
+    double get_constant(int bucketnum)
+    {
+        int i = 0;
+        while (1)
+        {
+            i++;
+            if ((1 << i) == bucketnum)
+                break;
+        }
+        switch (i)
+        {
+        case 4:
+            return 0.673;
+        case 5:
+            return 0.697;
+        case 6:
+            return 0.709;
+        default:
+            return 0.7213 / (1 + 1.079 / bucketnum);
+        }
+    }
+    void insert1(data_t item)
+    {
+        struct u tmp;
+        tmp.item = item;
+        tmp.index = get_index_from_cs1(item);
+        uint64_t finger = hll_hash(reinterpret_cast<const char *>(&tmp), sizeof(struct u), seed);
+        uint8_t new_cnt = getcount(GET_COUNT_KEY(finger));
+        int index = GET_BUCKET_INDEX(finger) % bucket_num;
+        if (bucket1[index] < new_cnt)
+        {
+            bucket1[index] = new_cnt;
+        }
+    }
+    void insert2(data_t item)
+    {
+        struct u tmp;
+        tmp.item = item;
+        tmp.index = get_index_from_cs2(item);
+        uint64_t finger = hll_hash(reinterpret_cast<const char *>(&tmp), sizeof(struct u), seed);
+        uint8_t new_cnt = getcount(GET_COUNT_KEY(finger));
+        int index = GET_BUCKET_INDEX(finger) % bucket_num;
+        if (bucket2[index] < new_cnt)
+        {
+            bucket2[index] = new_cnt;
+        }
+    }
+    uint64_t get_estimated_size1()
+    {
+        double all = 0;
+        for (int i = 0; i < bucket_num; i++)
+        {
+            all += (double)1 / (double)(1 << bucket1[i]);
+        }
+        // printf("all:%f",all);
+        double constant = get_constant(bucket_num);
+        uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
+        return num;
+    }
+    uint64_t get_estimated_size2()
+    {
+        double all = 0;
+        for (int i = 0; i < bucket_num; i++)
+        {
+            all += (double)1 / (double)(1 << bucket2[i]);
+        }
+        // printf("all:%f",all);
+        double constant = get_constant(bucket_num);
+        uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
+        return num;
+    }
+    uint64_t get_estimated_size_1and2()
+    {
+        double all = 0;
+        for (int i = 0; i < bucket_num; i++)
+        {
+            uint8_t m=std::max(bucket1[i],bucket2[i]);
+            all += (double)1 / (double)(1 << m);
+        }
+        // printf("all:%f",all);
+        double constant = get_constant(bucket_num);
+        uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
+        return num;
+    }
+    uint64_t get_estimated_size_1or2()
+    {
+        double all = 0;
+        for (int i = 0; i < bucket_num; i++)
+        {
+            uint8_t m=std::min(bucket1[i],bucket2[i]);
+            all += (double)1 / (double)(1 << m);
+        }
+        // printf("all:%f",all);
+        double constant = get_constant(bucket_num);
+        uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
+        return num;
+    }
+    double similarity(){
+        uint64_t size1I2 = get_estimated_size_1or2();
+        uint64_t size1U2=get_estimated_size_1and2();
+        return double(size1I2)/double(size1U2);
+    }
+    // double similarity(){
+    //     uint64_t size1=get_estimated_size1();
+    //     uint64_t size2=get_estimated_size2();
+    //     uint64_t size1_2=get_estimated_size_1and2();
+    //     return double(size1+size2-size1_2)/double(size1_2);
+    // }
 };
 
 class hyperloglog_excat
@@ -479,8 +671,8 @@ public:
         struct u tmp;
         tmp.item = item;
         tmp.index = get_index_from_hash1(item);
-        if (tmp.index == 0)
-            return;
+        // if (tmp.index == 0)
+        //     tmp.index = 1;
         uint64_t finger = hll_hash(reinterpret_cast<const char *>(&tmp), sizeof(struct u), seed);
         uint8_t new_cnt = getcount(GET_COUNT_KEY(finger));
         int index = GET_BUCKET_INDEX(finger) % bucket_num;
@@ -494,8 +686,8 @@ public:
         struct u tmp;
         tmp.item = item;
         tmp.index = get_index_from_hash2(item);
-        if (tmp.index == 0)
-            return;
+        // if (tmp.index == 0)
+        //     tmp.index = 1;
         uint64_t finger = hll_hash(reinterpret_cast<const char *>(&tmp), sizeof(struct u), seed);
         uint8_t new_cnt = getcount(GET_COUNT_KEY(finger));
         int index = GET_BUCKET_INDEX(finger) % bucket_num;
@@ -541,11 +733,23 @@ public:
         uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
         return num;
     }
+    uint64_t get_estimated_size_1or2()
+    {
+        double all = 0;
+        for (int i = 0; i < bucket_num; i++)
+        {
+            uint8_t m=std::min(bucket1[i],bucket2[i]);
+            all += (double)1 / (double)(1 << m);
+        }
+        // printf("all:%f",all);
+        double constant = get_constant(bucket_num);
+        uint64_t num = (uint64_t)(constant * (1 / all) * (bucket_num) * (bucket_num));
+        return num;
+    }
     double similarity(){
-        uint64_t size1=get_estimated_size1();
-        uint64_t size2=get_estimated_size2();
-        uint64_t size1_2=get_estimated_size_1and2();
-        return double(size1+size2-size1_2)/double(size1_2);
+        uint64_t size1I2 = get_estimated_size_1or2();
+        uint64_t size1U2=get_estimated_size_1and2();
+        return double(size1I2)/double(size1U2);
     }
 };
 #endif

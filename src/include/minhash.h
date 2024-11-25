@@ -69,10 +69,12 @@ public:
     {
         int min_cm_value = get_value_from_cm(item);
         // #pragma omp parallel for
-        for (int i = 0; i < HASH_CNT; i++)
-        {
-            min_hash_value[i] = std::min(min_hash_value[i], HASH::hash(HASH::hash(item, hash_seed[i]), min_cm_value));
-        }
+        // for (int i = 0; i < HASH_CNT; i++)
+        // {
+        //     min_hash_value[i] = std::min(min_hash_value[i], HASH::hash(HASH::hash(item, hash_seed[i]), min_cm_value));
+        // }
+        int min_idx =  static_cast<int>(HASH::hash(HASH::hash(item, slot_seed[0]), min_cm_value) % static_cast<uint64_t>(HASH_CNT));
+        min_hash_value[min_idx] = std::min(min_hash_value[min_idx], HASH::hash(HASH::hash(item, hash_seed[min_idx]), min_cm_value));
     }
 };
 
