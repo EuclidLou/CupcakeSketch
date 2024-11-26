@@ -1,28 +1,4 @@
-#include "include/dataset.h"
-#include "include/test_minhash.h"
-#include "include/test_hll.h"
-#include "include/test_sample.h"
-#include "include/test_cupcake.h"
-#include <iostream>
-#include <fstream>
-#include <ctime>
-#include <string>
-#include "logger.h"
-#include "macros.h"
-
-vector<double> postprocess(const std::vector<double>& similarity, double gt){
-    vector<double> RE(similarity.size());
-    for (size_t i = 0; i < similarity.size(); ++i){
-        RE[i] = std::abs((similarity[i] - gt) / gt);
-    }
-    vector<double> ret(2, 0.0);
-    ret[0] = std::accumulate(RE.begin(), RE.end(), 0.0) / RE.size();
-    for (double re : RE) {
-        ret[1] += std::pow(re - ret[0], 2);
-    }
-    ret[1] = std::sqrt(ret[1] / RE.size());
-    return ret;
-}
+#include "include/main.h"
 
 int main(){
     double metrics[]={0.0, 0.0};
@@ -44,18 +20,18 @@ int main(){
     LOG_RESULT("Relative Error of Hyperll: %lf%c", RE_hyperll[0]*100.0, '%');
     std::ofstream log_file("log/execution_log.txt", std::ios_base::app);
     log_file    << "Dataset: "      << std::left << std::setw(10) << std::setfill(' ') << DATASET << "\t"
-                // << "Separate: "     << S_FACTOR << "\t"
-                // << "Heavy-bias: "   << std::left << std::setw(5) << std::setfill(' ') << HEAVY_BIAS << "\t"
-                // << "Swap-factor: "  << std::left << std::setw(2) << std::setfill(' ') << SWAP_FACTOR << "\t"
+                << "Separate: "     << S_FACTOR << "\t"
+                << "Heavy-bias: "   << std::left << std::setw(5) << std::setfill(' ') << HEAVY_BIAS << "\t"
+                << "Swap-factor: "  << std::left << std::setw(2) << std::setfill(' ') << SWAP_FACTOR << "\t"
                 << "K: "            << std::left << std::setw(10) << std::setfill(' ') << K << "\t"
                 << "Mem in KB: "    << std::left << std::setw(6) << std::setfill(' ') << std::setprecision(3) << MEMORY_1_24*24.0/1024.0 << "\t"
-                // << "GT: "           << std::fixed << std::setprecision(6) << gt << "\t"
-                << "MinHash: "         << std::fixed << std::setprecision(6) << RE_minhash[0] << "\t" // << std::fixed << std::setprecision(6) << RE_minhash[1] << "\t"
-                << "Sampled: "         << std::fixed << std::setprecision(6) << RE_sampled[0] << "\t" // << std::fixed << std::setprecision(6) << RE_sampled[1] << "\t"
-                << "Hyperll: "         << std::fixed << std::setprecision(6) << RE_hyperll[0] << "\t" // << std::fixed << std::setprecision(6) << RE_hyperll[1] << "\t"
-                << "Cupcake: "         << std::fixed << std::setprecision(6) << RE_cupcake[0] << "\t" // << std::fixed << std::setprecision(6) << RE_cupcake[1] << "\t"
-                // << (USE_TOWER == 1 ? "With Tower \t" : (USE_CS == 0 ? "Level-1 CM \t" : (USE_CS == 1 ? "Level-1 CS \t" : "Level-3 CS \t")))
-                // << (DHASH == 0 ? "S-Hash     \t" : "D-Hash     \t")
+                << "GT: "           << std::fixed << std::setprecision(6) << gt << "\t"
+                << "MinHash: "         << std::fixed << std::setprecision(6) << RE_minhash[0] << "\t" << std::fixed << std::setprecision(6) << RE_minhash[1] << "\t"
+                << "Sampled: "         << std::fixed << std::setprecision(6) << RE_sampled[0] << "\t" << std::fixed << std::setprecision(6) << RE_sampled[1] << "\t"
+                << "Hyperll: "         << std::fixed << std::setprecision(6) << RE_hyperll[0] << "\t" << std::fixed << std::setprecision(6) << RE_hyperll[1] << "\t"
+                << "Cupcake: "         << std::fixed << std::setprecision(6) << RE_cupcake[0] << "\t" << std::fixed << std::setprecision(6) << RE_cupcake[1] << "\t"
+                << (USE_TOWER == 1 ? "With Tower \t" : (USE_CS == 0 ? "Level-1 CM \t" : (USE_CS == 1 ? "Level-1 CS \t" : "Level-3 CS \t")))
+                << (DHASH == 0 ? "S-Hash     \t" : "D-Hash     \t")
                 #if METRICS == 1
                 << "AAE: "          << std::left << std::setfill(' ') << std::setw(10) << std::fixed << std::setprecision(3) << metrics[0] << "\t" 
                 << "ARE: "          << std::fixed << std::setprecision(4) << metrics[1] << "%\t"
